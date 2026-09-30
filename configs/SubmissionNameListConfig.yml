@@ -11,7 +11,7 @@ terminfo:
   ext: 'True'
   origin: 'CRDC'
   definition: 'Official study names for CRDC'
-  code: 'CRDC0007'
+  code: 'CRDC0008'
   version: 1
   value: 'Official study names for CRDC'
 #outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
@@ -21,3 +21,4 @@ termfile: terms\crdc-studynames-terms.yml
 startingtermfile: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\terms\crdc-studynames-terms.yml'
 #startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml'
 startingtermfileurl: None
+force: True

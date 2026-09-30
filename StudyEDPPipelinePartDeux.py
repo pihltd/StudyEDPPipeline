@@ -134,7 +134,8 @@ def buildPropJSON(configs, df, verbose=0):
     final['Nodes'] = {}
     final['Relationships'] = {}
     
-    enumlist = df['study.studyName'].unique().tolist()
+    #enumlist = df['study.studyName'].unique().tolist()
+    enumlist = df['study.studyAbbreviation'].unique().tolist()
     terminfo = [{'Origin': configs['terminfo']['origin'],
                  'Definition':  configs['terminfo']['definition'],
                  'Code': configs['terminfo']['code'],
@@ -166,6 +167,12 @@ def main(args):
     # Check agaisnt the bento-eps repo to see if the new names differ from the old names.
     aredifferent = updateCheck(termjson=finalterm, configs=configs, verbose=args.verbose)
     
+    #Trigger to force a run, even if there is a match
+    if configs['force']:
+        if args.verbose >= 1:
+            print("Forcing an update")
+        aredifferent = True
+        
     #It only makes sense to continue if the new and existin are different
     if aredifferent:
         if args.verbose >= 1:
