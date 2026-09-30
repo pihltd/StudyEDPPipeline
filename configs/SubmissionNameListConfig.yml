@@ -1,0 +1,23 @@
+tier: 'prod'
+nodename: 'edp'
+propname: 'crdc_study_names'
+outputfiles:
+  studynamesFile: 'C:\Users\pihltd\Documents\VMShare\StudyNames\studyNames.tsv'
+  studyabbrevFile: 'C:\Users\pihltd\Documents\VMShare\StudyNames\studyAbbrevs.tsv'
+  comboFile: 'C:\Users\pihltd\Documents\VMShare\StudyNames\studycomplete.tsv'
+  queryresultsFile: 'C:\Users\pihltd\Documents\VMShare\StudyNames\submission_type.tsv'
+terminfo:
+  termdesc: 'Official study names for CRDC'
+  ext: 'True'
+  origin: 'CRDC'
+  definition: 'Official study names for CRDC'
+  code: 'CRDC0007'
+  version: 1
+  value: 'Official study names for CRDC'
+#outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
+outputpath: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\'
+propfile: crdc-studynames-props.yml
+termfile: terms\crdc-studynames-terms.yml
+startingtermfile: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\terms\crdc-studynames-terms.yml'
+#startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml'
+startingtermfileurl: None
