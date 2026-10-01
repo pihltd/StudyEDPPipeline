@@ -2,12 +2,10 @@
 from crdclib import crdclib
 import argparse
 import pandas as pd
-import sys
 from collections import Counter
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
-import json
 import yaml
 
 def updateCheck(termjson, configs, verbose=0):

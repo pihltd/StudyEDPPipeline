@@ -1,5 +1,6 @@
 tier: 'prod'
-nodename: 'edp'
+handle: 'CRDCSN_EDP'
+nodename: '_EDP'
 propname: 'crdc_study_names'
 outputfiles:
   studynamesFile: 'C:\Users\pihltd\Documents\VMShare\StudyNames\studyNames.tsv'
@@ -14,11 +15,11 @@ terminfo:
   code: 'CRDC0008'
   version: 1
   value: 'Official study names for CRDC'
-#outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
-outputpath: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\'
+outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
+#outputpath: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\'
 propfile: crdc-studynames-props.yml
 termfile: terms\crdc-studynames-terms.yml
 startingtermfile: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\terms\crdc-studynames-terms.yml'
-#startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml'
-startingtermfileurl: None
+startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml'
+#startingtermfileurl: None
 force: True

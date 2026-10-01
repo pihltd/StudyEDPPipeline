@@ -1,80 +1,88 @@
 from crdclib import crdclib
 import argparse
 import pandas as pd
-from bento_mdf import MDFWriter
-from bento_meta.model import Model, Term
-import sys
+from collections import Counter
+from bento_meta.model import Model
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
+import yaml
 
 
-def mdfWriteModelFiles(mdf, sectionlist, writedir):
-    """
-    Writes out an mdf model object to one or more YAML files.  Does some sorting to get the YAML in proper order (Handle/Version/Nodes/Properties)
+def getGitHubPortalStudies(configs, verbose=0):
+    try:
+        retry = Retry(total=5, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retry)
+        session = requests.Session()
+        session.mount('https://', adapter)
+        headers={"Accept": "application/vnd.github.v4+raw"}
+        results = session.get(url=configs['startingtermfileurl'], headers=headers, timeout=180)
+    except requests.exceptions.HTTPError as e:
+        print(e)
+        return None
+    if results.status_code == 200:
+        content = results.content.decode('utf-8')
+        yamlresults = yaml.safe_load(content)
+        return yamlresults
+    else:
+        return None
 
-    :param mdf: MDF Model Object
-    :type mdf: MDF model
-    :param sectionlist: A list of the sections that should be printed.  Allowed value are Model, PropDefinitions, Terms, Relationships.
-    :type sectionlist: List
-    :param writedir: The direcotory to write the MDF files into
-    :type writedir: String
-    """
 
-    tempdict = MDFWriter(mdf).mdf
-    mdfdict = {}
-    allowedsectionlist = ['Handle', 'Version', 'Nodes', 'Relationships', 'PropDefinitions', 'Terms']
-
-    #Sorts keys for order in yaml
-    for entry in allowedsectionlist:
-        if entry in tempdict.keys():
-            mdfdict[entry] = tempdict[entry]
-    for key in tempdict.keys():
-        if key not in allowedsectionlist:
-            mdfdict[key] = tempdict[key]
-
-    if len(sectionlist) > 1:
-        for section in sectionlist:
-            if section in allowedsectionlist:
-                if section != 'Model':
-                    filename = f"{writedir}{mdf.handle}-model-{section.lower()}.yml"
-                    printnode = {}
-                    printnode[section] = mdfdict.pop(section, None)
-                    print(f"Writing file {filename}")
-                    crdclib.writeYAML(filename=filename, jsonobj=printnode)
-    #Now write out whatever is left.  If Model is only section, it all gets printed
-    filename = f"{writedir}{mdf.handle}-model.yml"
-    crdclib.writeYAML(filename=filename, jsonobj=mdfdict)
-
-# TODO: Build a check to see if the EDP matches what is in the Submission Portal
-
-def main(args):
+def updateCheck(portalstudylist, configs, verbose=0):
+    if verbose >= 1:
+        print("Checking if update is needed")
+    # Check to see if there are any new studies.
+    # If there is no URL to Github, read the local file
+    if verbose >= 2:
+        print(f"URL is {configs['startingtermfileurl']} and type {type(configs['startingtermfileurl'])}")
+    if configs['startingtermfileurl'] == 'None':
+        originaljson = crdclib.readYAML(configs['startingtermfile'])
+    # Otherwise read from GithHub
+    else:
+        originaljson = getGitHubPortalStudies(configs=configs)
+    oldterms = list(originaljson['Terms'].keys())
     
-    configs = crdclib.readYAML(args.configfile)
-    
-    # Get the study info from the portal
+    if Counter(portalstudylist) == Counter(oldterms):
+        return False
+    else:
+        return True
+
+
+
+def getPortalStudies(configs, verbose=0):
     query = """
-  {
-    listSubmissions(status:["All"]){
-      submissions{
-        _id
-        name
-        study{
-          studyName
-          studyAbbreviation
-          dbGaPID
+        {
+            listSubmissions(status:["All"]){
+            submissions{
+                _id
+                name
+                study{
+                studyName
+                studyAbbreviation
+                dbGaPID
+                }
+                dataCommons
+                modelVersion
+                nodeCount
+                submitterName
+                status
+                dataType
+            }
+            }
         }
-        dataCommons
-        modelVersion
-        nodeCount
-        submitterName
-        status
-        dataType
-      }
-    }
-  }
-  """
+        """
+    if verbose >= 1:
+        print("Obtaining credentials")
+    creds = crdclib.dhAPICreds(tier=configs['tier'])
+    
+    if args.verbose >= 1:
+            print("Running query for study information")
+    res = crdclib.dhApiQuery(creds['url'], creds['token'], query=query)
+    
     if args.verbose >= 1:
         print("Obtaining credentials")
     creds = crdclib.dhAPICreds(tier=configs['tier'])
-  
+    
     if args.verbose >= 1:
         print("Running query for study information")
     res = crdclib.dhApiQuery(creds['url'], creds['token'], query=query)
@@ -86,88 +94,80 @@ def main(args):
         print("Deduplicating by study name")
     df.drop_duplicates(subset='study.studyName', keep='last', inplace=True)
     
-    if args.verbose >= 1:
-        print("Creating empty model")
-    #edp_mdf = bento_mdf.MDF(handle='StudyNameEDP')
-    edp_mdf = Model(handle='StudyNameEDP')
-    #edp_mdf = edp_mdf.model
-    
-    # Need a node because you can't have a property without a node.
-    if args.verbose >= 1:
-        print("Creating sacrificial node")
-    edp_mdf = crdclib.mdfAddNodes(edp_mdf, [configs['nodename']])
-    
-    if args.verbose >= 1:
-        print("Creating property")
-    propinfo = {'prop':configs['propname'], 
-                'isreq': 'No',
-                'iskey': 'No',
-                'val': 'value_set' ,
-                'desc': 'Official CRDC Study names'}
-    
-    edp_mdf = crdclib.mdfAddProperty(edp_mdf,{configs['nodename']:[propinfo]})
-    
-    if args.verbose >= 1:
-        print("Annotating the overarching Term")
-    terminfo = {'Origin': configs['terminfo']['origin'], 
-                'Definition':configs['terminfo']['definition'], 
-                'Code': configs['terminfo']['code'],
-                'Version': configs['terminfo']['version'],
-                'Value': configs['terminfo']['value']}
-    
-    #edp_mdf = crdclib.mdfAnnotateTerms(mdfmodel=edp_mdf, nodename=configs['nodename'], propname=configs['propname'], termdict=terminfo)
-    '''
-    if args.verbose >= 1:
-        print("Adding the enums")
-    ## Get lists of names and abbreviations
-    studylist = df['study.studyName'].unique().tolist()
-    edp_mdf = crdclib.mdfAddEnums(mdfmodel=edp_mdf, nodename=configs['nodename'], propname=configs['propname'], enumlist=studylist)
-    '''
-    
-    if args.verbose >= 1:
-        print("Adding the individual terms")
-    for index, row in df.iterrows():
-        terminfo = {'Origin': configs['terminfo']['origin'], 
-                'Definition':row['study.studyAbbreviation'], 
-                'Code': configs['terminfo']['code'],
-                'Version': configs['terminfo']['version'],
-                'Value': row['study.studyName']}
-        print(terminfo)
-        propobj = edp_mdf.props[configs['nodename'], configs['propname']]
-        termobj = Term(terminfo)
-        edp_mdf.add_terms(propobj, termobj)
-        
-        #edp_mdf = crdclib.mdfAddTerms(mdfmodel=edp_mdf, nodename=configs['nodename'], propname=configs['propname'], termdict=terminfo)
-    
+    return df
 
-    if args.verbose >= 1:
-        print(f"Writing files to {configs['outputpath']}")
-        print(edp_mdf.nodes)
-        print(edp_mdf.props)
-        print(edp_mdf.terms)
-    sectionlist = ['Model', 'Terms']
-    mdfWriteModelFiles(mdf=edp_mdf, sectionlist=sectionlist, writedir=configs['outputpath'])
+
+def main(args):
     
+    configs = crdclib.readYAML(args.configfile)
     
+    df = getPortalStudies(configs=configs, verbose=args.verbose)
     
+    # Look to see if an update is needed
+    portalstudylist = df['study.studyAbbreviation'].unique().tolist()
     
+    #Check to see if there are any changes
+    aredifferent = updateCheck(portalstudylist=portalstudylist, configs=configs, verbose=args.verbose)
+    # If set to force, proceed regardles of changes
+    if configs['force']:
+        if args.verbose >= 1:
+            print("Forcing an update")
+        aredifferent = True
+
+    if aredifferent:
+        #proceed if True
+        if args.verbose >= 1:
+            print('Changes found in studies, creating update files')
+            print("Creating empty model")
+        edp_mdf = Model(handle=configs['handle'], version=configs['terminfo']['version'])
+        
+        # Need a node because you can't have a property without a node.
+        if args.verbose >= 1:
+            print("Creating sacrificial node")
+        edp_mdf = crdclib.mdfAddNodes(edp_mdf, [configs['nodename']])
+        
+        if args.verbose >= 1:
+            print("Creating property")
+        propinfo = {'prop':configs['propname'], 
+                    'isreq': 'No',
+                    'iskey': 'No',
+                    'val': 'value_set' ,
+                    'desc': 'Official CRDC Study names'}
+                    #'is_extended': 'True'}
+        
+        edp_mdf = crdclib.mdfAddProperty(edp_mdf,{configs['nodename']:[propinfo]})
+        
+        # So, it turns out that if you use prop.add_term it also populates the Enum section 
+        if args.verbose >= 1:
+            print("Adding the terms")
+        for index, row in df.iterrows():
+            definition =""
+            # Definition should be dbGaPID if there is one, otherwise use the data commons name
+            if row['study.dbGaPID'] is not None:
+                definition = row['study.dbGaPID']
+            else:
+                definition = row['dataCommons']
+                
+            terminfo = {'handle': row['study.studyAbbreviation'],
+                        'value':row['study.studyName'],
+                        'origin_version': configs['terminfo']['version'],
+                        'origin_name': configs['terminfo']['origin'],
+                        'origin_id':row['study.studyAbbreviation'],
+                        'origin_definition': definition}
+            if args.verbose >= 2:
+                print(f"{terminfo}\n")        
+            edp_mdf = crdclib.mdfAddTerms(mdfmodel=edp_mdf, nodename=configs['nodename'], propname=configs['propname'], termdict=terminfo)
+        
+
+        if args.verbose >= 1:
+            print(f"Writing files to {configs['outputpath']}")
+        sectionlist = ['Model', 'Terms']
+        crdclib.mdfWriteModelFiles(mdf=edp_mdf, sectionlist=sectionlist, writedir=configs['outputpath'])
     
-    #abbrevlist = df['study.studyAbbreviation'].unique().tolist()
-    #if args.verbose >= 2:
-    #    print(f"List of all studies:\n{studylist}\n")
-    #    print(f"List of all abbreviations:\n{abbrevlist}\n")
-    
-    #big_kahuna = []
-    #for index, row in df.iterrows():
-    #    big_kahuna.append({row['study.studyName']:row['study.studyAbbreviation']})
-    
-    # The append statement creates a tuple, need to cast to a dictionary
-    #big_kahuna = [dict(t) for t in {tuple(d.items()) for d in big_kahuna}]
-    
-    #for entry in big_kahuna:
-    #    for name, abbrev in entry.items():
+    else:
+        if args.verbose >= 1:
+            print('No change in studies, no update needed')
             
-    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
