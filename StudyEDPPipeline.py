@@ -7,7 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import yaml
-
+import logging
 
 def getGitHubPortalStudies(configs, verbose=0):
     try:
@@ -43,10 +43,27 @@ def updateCheck(portalstudylist, configs, verbose=0):
     oldterms = list(originaljson['Terms'].keys())
     
     if Counter(portalstudylist) == Counter(oldterms):
-        return False
+        return True 
     else:
-        return True
+        return False
 
+
+def checkDiff(portalstudylist, configs, verbose=0):
+    if verbose >= 1:
+        print("Generated Diff")
+    
+    if configs['startingtermfileurl'] == 'None':
+        originaljson = crdclib.readYAML(configs['startingtermfile'])
+    # Otherwise read from GithHub
+    else:
+        originaljson = getGitHubPortalStudies(configs=configs)
+    oldterms = list(originaljson['Terms'].keys())
+
+    newstudies = []
+    for study in portalstudylist:
+        if study not in portalstudylist:
+            newstudies.append(study)
+    return newstudies
 
 
 def getPortalStudies(configs, verbose=0):
@@ -101,6 +118,10 @@ def main(args):
     
     configs = crdclib.readYAML(args.configfile)
     
+    # Set up logging
+    logging.basicConfig(filename=configs['logfile'], level=logging.INFO, format='%(asctime)s  - %(levelname)s - %(message)s ')
+   
+    
     df = getPortalStudies(configs=configs, verbose=args.verbose)
     
     # Look to see if an update is needed
@@ -110,12 +131,17 @@ def main(args):
     aredifferent = updateCheck(portalstudylist=portalstudylist, configs=configs, verbose=args.verbose)
     # If set to force, proceed regardles of changes
     if configs['force']:
+        logging.info('Forcing new file creation')
         if args.verbose >= 1:
             print("Forcing an update")
         aredifferent = True
 
     if aredifferent:
         #proceed if True
+        if configs['updatediff']:
+            newstuff = checkDiff(portalstudylist=portalstudylist, configs=configs, verbose=args.verbose)
+            for entry in newstuff:
+                logging.info(f"New study {entry} ")
         if args.verbose >= 1:
             print('Changes found in studies, creating update files')
             print("Creating empty model")
@@ -161,10 +187,12 @@ def main(args):
 
         if args.verbose >= 1:
             print(f"Writing files to {configs['outputpath']}")
+        logging.info(f"Writing files to {configs['outputpath']}")
         sectionlist = ['Model', 'Terms']
         crdclib.mdfWriteModelFiles(mdf=edp_mdf, sectionlist=sectionlist, writedir=configs['outputpath'])
     
     else:
+        logging.info('No new studies found')
         if args.verbose >= 1:
             print('No change in studies, no update needed')
             

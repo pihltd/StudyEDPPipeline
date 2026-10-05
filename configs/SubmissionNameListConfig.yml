@@ -15,11 +15,13 @@ terminfo:
   code: 'CRDC0008'
   version: 1
   value: 'Official study names for CRDC'
-outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
-#outputpath: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\'
+#outputpath: 'C:\Users\pihltd\Documents\VMShare\StudyNames\'
+outputpath: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\'
 propfile: crdc-studynames-props.yml
 termfile: terms\crdc-studynames-terms.yml
 startingtermfile: 'C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\terms\crdc-studynames-terms.yml'
-startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml'
+startingtermfileurl: 'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/main/model-desc/terms/crdc-studynames-terms.yml'
 #startingtermfileurl: None
-force: True
+force: False
+updatediff: True
+logfile: 'C:\Users\pihltd\Documents\GitHub\StudyEDPPipeline\logs\study_log.txt'
