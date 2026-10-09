@@ -1,4 +1,4 @@
-from crdclib import crdclib
+#from crdclib import crdclib
 import argparse
 import pandas as pd
 from collections import Counter
@@ -8,6 +8,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import yaml
 import logging
+
+import sys
+sys.path.append('../')
+from CRDCLib.src.crdclib import crdclib
 
 def getGitHubPortalStudies(configs, verbose=0):
     try:
@@ -188,8 +192,9 @@ def main(args):
         if args.verbose >= 1:
             print(f"Writing files to {configs['outputpath']}")
         logging.info(f"Writing files to {configs['outputpath']}")
+        filenamedict = {'model':configs['propfile'], 'terms':configs['termfile']}
         sectionlist = ['Model', 'Terms']
-        crdclib.mdfWriteModelFiles(mdf=edp_mdf, sectionlist=sectionlist, writedir=configs['outputpath'])
+        crdclib.mdfWriteModelFiles(mdf=edp_mdf, sectionlist=sectionlist, writedir=configs['outputpath'], filenamedict=filenamedict)
     
     else:
         logging.info('No new studies found')

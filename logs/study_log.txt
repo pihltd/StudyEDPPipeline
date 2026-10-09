@@ -1,0 +1,9 @@
+2026-10-05 15:44:01,007  - INFO - Forcing new file creation 
+2026-10-05 15:44:01,607  - INFO - Writing files to C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\ 
+2026-10-05 15:49:23,045  - INFO - Forcing new file creation 
+2026-10-05 15:49:23,562  - INFO - Writing files to C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\ 
+2026-10-05 15:49:50,977  - INFO - Forcing new file creation 
+2026-10-05 15:49:51,638  - INFO - Writing files to C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\ 
+2026-10-06 12:52:58,423  - INFO - Forcing new file creation 
+2026-10-06 12:52:58,901  - INFO - Writing files to C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\ 
+2026-10-06 12:54:17,947  - INFO - No new studies found 
