@@ -63,6 +63,7 @@ Both programs use the same config file fields.  Must be in YAML format, see **co
 | termfile| terms\crdc-studynames-terms.yml | Do Not Change.  Name for the Terms file |
 | startingtermfile | | Full path to a file version of the current EDP Terms file. |
 | startingtermfileurl |'https://raw.githubusercontent.com/CBIIT/bento-edps/refs/heads/CRDC-StudyNames/model-desc/terms/crdc-studynames-terms.yml' | URL to the GitHub raw copy of the term file.  Preferred over *startingtermfile* |
-| force | True/False | If set to True, EDP files will be generated even if there has been no change in the study names. |
+| force | True/False | If set to True, EDP files will be generated even if there has been no change in the study names. Will create files regardless of the value in *force* |
 | updatediff | True/False | If set to True, the program will print a list of the new studies to the console and log file. |
+| testonly | True/False | If set to True, the program will only check if an update is needed, no new files will be generated. *Force* will take precendce over *testonly*. |
 | logfile | Full path to the log file | File that will hold some basic log information |

@@ -139,6 +139,19 @@ def main(args):
         if args.verbose >= 1:
             print("Forcing an update")
         aredifferent = True
+    elif configs['force'] and configs['testonly']:
+        logging.info('Force overriding testonly')
+        if args.verbose >= 1:
+            print("Forcing an update")
+        aredifferent = True
+    elif configs['testonly']:
+        aredifferent = False
+        logging.info('Test only mode, no files generated')
+        if args.verbose >= 1:
+            print("Test only mode, no files generated")
+        newstuff = checkDiff(portalstudylist=portalstudylist, configs=configs, verbose=args.verbose)
+        for entry in newstuff:
+            logging.info(f"New study {entry} ")
 
     if aredifferent:
         #proceed if True

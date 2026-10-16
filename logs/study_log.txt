@@ -7,3 +7,5 @@
 2026-10-06 12:52:58,423  - INFO - Forcing new file creation 
 2026-10-06 12:52:58,901  - INFO - Writing files to C:\Users\pihltd\Documents\GitHub\bento-edps\model-desc\ 
 2026-10-06 12:54:17,947  - INFO - No new studies found 
+2026-10-16 14:28:07,732  - INFO - Test only mode, no files generated 
+2026-10-16 14:28:08,220  - INFO - No new studies found 
